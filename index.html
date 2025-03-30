@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA 2K MyCareer 升級系統</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: #f4f4f4; }
+        .container { width: 80%; margin: auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0px 0px 10px gray; }
+        h1 { color: #333; }
+        .stats, .upgrades { margin-top: 20px; text-align: left; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏀 NBA 2K MyCareer VC 計算 & 升級系統</h1>
+
+        <h2>輸入比賽數據</h2>
+        <label>得分: <input type="number" id="points"></label><br>
+        <label>籃板: <input type="number" id="rebounds"></label><br>
+        <label>助攻: <input type="number" id="assists"></label><br>
+        <label>抄截: <input type="number" id="steals"></label><br>
+        <label>封阻: <input type="number" id="blocks"></label><br>
+        <label>勝利? <input type="checkbox" id="isWin"></label><br>
+        <label>隊內最佳球員? <input type="checkbox" id="isMVP"></label><br>
+        <button onclick="computeVC()">計算 VC</button>
+
+        <h2>VC 餘額: <span id="vcBalance">0</span> VC</h2>
+
+        <h2>球員能力值</h2>
+        <div class="stats">
+            <p>近距離投籃: <span id="closeShot">50</span> <button onclick="upgrade('closeShot')">升級 (-200 VC)</button></p>
+            <p>三分球: <span id="threePoint">50</span> <button onclick="upgrade('threePoint')">升級 (-200 VC)</button></p>
+            <p>傳球準確度: <span id="passAccuracy">50</span> <button onclick="upgrade('passAccuracy')">升級 (-200 VC)</button></p>
+            <p>防守能力: <span id="defense">50</span> <button onclick="upgrade('defense')">升級 (-200 VC)</button></p>
+            <p>速度: <span id="speed">50</span> <button onclick="upgrade('speed')">升級 (-200 VC)</button></p>
+        </div>
+
+        <h2>徽章系統</h2>
+        <div class="upgrades">
+            <p>投籃徽章: <span id="shootingBadge">無</span> <button onclick="upgradeBadge('shootingBadge')">升級</button></p>
+            <p>防守徽章: <span id="defenseBadge">無</span> <button onclick="upgradeBadge('defenseBadge')">升級</button></p>
+        </div>
+    </div>
+
+    <script>
+        let vcBalance = parseInt(localStorage.getItem("vcBalance")) || 0;
+        let attributes = JSON.parse(localStorage.getItem("attributes")) || {
+            closeShot: 50, threePoint: 50, passAccuracy: 50, defense: 50, speed: 50
+        };
+        let badges = JSON.parse(localStorage.getItem("badges")) || { shootingBadge: 0, defenseBadge: 0 };
+
+        document.getElementById("vcBalance").innerText = vcBalance;
+        for (let attr in attributes) {
+            document.getElementById(attr).innerText = attributes[attr];
+        }
+
+        function computeVC() {
+            let points = parseInt(document.getElementById("points").value) || 0;
+            let rebounds = parseInt(document.getElementById("rebounds").value) || 0;
+            let assists = parseInt(document.getElementById("assists").value) || 0;
+            let steals = parseInt(document.getElementById("steals").value) || 0;
+            let blocks = parseInt(document.getElementById("blocks").value) || 0;
+            let isWin = document.getElementById("isWin").checked;
+            let isMVP = document.getElementById("isMVP").checked;
+
+            let vc = points * 10 + rebounds * 20 + assists * 25 + steals * 30 + blocks * 30;
+            if (isWin) vc += 200;
+            if (isMVP) vc += 500;
+
+            vcBalance += vc;
+            document.getElementById("vcBalance").innerText = vcBalance;
+            localStorage.setItem("vcBalance", vcBalance);
+        }
+
+        function upgrade(attribute) {
+            if (vcBalance >= 200 && attributes[attribute] < 99) {
+                vcBalance -= 200;
+                attributes[attribute] += 5;
+                document.getElementById("vcBalance").innerText = vcBalance;
+                document.getElementById(attribute).innerText = attributes[attribute];
+
+                localStorage.setItem("vcBalance", vcBalance);
+                localStorage.setItem("attributes", JSON.stringify(attributes));
+            } else {
+                alert("VC 不足 或 已達最高等級！");
+            }
+        }
+
+        function upgradeBadge(badgeType) {
+            let cost = [500, 1000, 2000];
+            let currentLevel = badges[badgeType];
+
+            if (currentLevel < 3 && vcBalance >= cost[currentLevel]) {
+                vcBalance -= cost[currentLevel];
+                badges[badgeType] += 1;
+
+                let badgeNames = ["無", "青銅", "白銀", "黃金", "名人堂"];
+                document.getElementById(badgeType).innerText = badgeNames[badges[badgeType]];
+
+                localStorage.setItem("vcBalance", vcBalance);
+                localStorage.setItem("badges", JSON.stringify(badges));
+            } else {
+                alert("VC 不足 或 已達最高等級！");
+            }
+        }
+    </script>
+</body>
+</html>
